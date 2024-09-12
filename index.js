@@ -208,7 +208,14 @@ async function run() {
     // applications api endpoints ........
 
     // fetch all applications
-    app.get("/applications", async (req, res) => {
+    app.get("/applications", verifyToken, async (req, res) => {
+      const { email } = req.body;
+
+      // validated user checking
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+
       const applications = await applicationsCollection.find().toArray();
 
       res.send(applications);
