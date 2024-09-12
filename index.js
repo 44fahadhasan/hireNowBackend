@@ -3,6 +3,7 @@ const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 
 // create a express app
 const app = express();
@@ -18,6 +19,31 @@ app.use(
     credentials: true,
   })
 );
+
+// customs middleware
+
+// token validaton of logged user
+const verifyToken = (req, res, next) => {
+  const token = req.headers;
+
+  if (!token.authorization) {
+    return res.status(401).send({ message: "Token is null" });
+  }
+
+  const orginalToken = token.authorization.split(" ")[1];
+
+  const secretKey = process.env.TOKEN_SECRET;
+
+  jwt.verify(orginalToken, secretKey, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Token not match" });
+    }
+
+    req.decoded = decoded;
+
+    next();
+  });
+};
 
 // mongodb uri
 const uri = `mongodb+srv://${process.env.BD_USER}:${process.env.DB_PASS}@clustercar.wslyx5y.mongodb.net/?retryWrites=true&w=majority&appName=ClusterCar`;
@@ -36,11 +62,35 @@ async function run() {
     // create a database
     const db = client.db("hireNow");
 
-    // collections
+    // collections ........
+
     // job listings
     const jobListingsCollection = db.collection("jobListings");
 
-    // job listings api endpoints
+    // users
+    const usersCollection = db.collection("users");
+
+    // jwt security api endpoints ........
+
+    // when user login success then create a token and sent to client side
+    app.post("/token", (req, res) => {
+      const { email, role } = req.body;
+
+      const payload = {
+        email,
+        role,
+      };
+
+      const secretKey = process.env.TOKEN_SECRET;
+
+      const token = jwt.sign(payload, secretKey, {
+        expiresIn: "365d",
+      });
+
+      res.send(token);
+    });
+
+    // job listings api endpoints ........
 
     // fetch all job listings
     app.get("/jobs", async (req, res) => {
@@ -104,6 +154,52 @@ async function run() {
       const result = await jobListingsCollection.deleteOne(filter);
 
       res.send(result);
+    });
+
+    // user authentication api endpoints ........
+
+    // register as a new job seeker or employer
+    app.post("/auth/register", async (req, res) => {
+      const data = req.body;
+
+      // check is user already registered
+      const query = { email: data.email };
+
+      const isRegistered = await usersCollection.findOne(query);
+
+      if (isRegistered) {
+        return res.send({
+          message: "The user is already registered",
+        });
+      }
+
+      const userDoc = {
+        ...data,
+      };
+
+      const result = await usersCollection.insertOne(userDoc);
+
+      res.send(result);
+    });
+
+    // get user profile details using jwt
+    app.post("/auth/me", verifyToken, async (req, res) => {
+      const { email } = req.body;
+
+      // validated user checking
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+
+      const query = { email: email };
+
+      const options = {
+        projection: { _id: 0 },
+      };
+
+      const user = await usersCollection.findOne(query, options);
+
+      res.send(user);
     });
 
     // ..................
