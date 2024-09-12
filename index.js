@@ -70,6 +70,9 @@ async function run() {
     // users
     const usersCollection = db.collection("users");
 
+    // applications
+    const applicationsCollection = db.collection("applications");
+
     // jwt security api endpoints ........
 
     // when user login success then create a token and sent to client side
@@ -200,6 +203,26 @@ async function run() {
       const user = await usersCollection.findOne(query, options);
 
       res.send(user);
+    });
+
+    // applications api endpoints ........
+
+    // fetch all applications
+    app.get("/applications", async (req, res) => {
+      const applications = await applicationsCollection.find().toArray();
+
+      res.send(applications);
+    });
+
+    // save a new applications (job seeker only)
+    app.post("/applications", async (req, res) => {
+      const data = req.body;
+
+      const applicationDoc = { ...data };
+
+      const result = await applicationsCollection.insertOne(applicationDoc);
+
+      res.send(result);
     });
 
     // ..................
