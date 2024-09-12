@@ -2,7 +2,7 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // create a express app
 const app = express();
@@ -33,6 +33,80 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    // create a database
+    const db = client.db("hireNow");
+
+    // collections
+    // job listings
+    const jobListingsCollection = db.collection("jobListings");
+
+    // job listings api endpoints
+
+    // fetch all job listings
+    app.get("/jobs", async (req, res) => {
+      const jobListings = await jobListingsCollection.find().toArray();
+
+      res.send(jobListings);
+    });
+
+    // fetch a single job
+    app.get("/jobs/:id", async (req, res) => {
+      const { id } = req.params;
+
+      const query = { _id: new ObjectId(id) };
+
+      const job = await jobListingsCollection.findOne(query);
+
+      res.send(job);
+    });
+
+    // create a new job (employer only)
+    app.post("/jobs", async (req, res) => {
+      const data = req.body;
+
+      const newJobDoc = {
+        ...data,
+        postedAt: Date.now(),
+      };
+
+      const result = await jobListingsCollection.insertOne(newJobDoc);
+
+      res.send(result);
+    });
+
+    // update a job listing
+    app.put("/jobs/:id", async (req, res) => {
+      const { id } = req.params;
+      const data = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+
+      const jobUpdateDoc = {
+        $set: { ...data },
+      };
+
+      const result = await jobListingsCollection.updateOne(
+        filter,
+        jobUpdateDoc
+      );
+
+      res.send(result);
+    });
+
+    // delete a job listing
+    app.delete("/jobs/:id", async (req, res) => {
+      const { id } = req.params;
+
+      const filter = {
+        _id: new ObjectId(id),
+      };
+
+      const result = await jobListingsCollection.deleteOne(filter);
+
+      res.send(result);
+    });
+
+    // ..................
     // clear the code when deploy in remote server
     await client.connect();
     // Send a ping to confirm a successful connection
