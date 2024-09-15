@@ -77,11 +77,10 @@ async function run() {
 
     // when user login success then create a token and sent to client side
     app.post("/token", (req, res) => {
-      const { email, role } = req.body;
+      const { email } = req.body;
 
       const payload = {
         email,
-        role,
       };
 
       const secretKey = process.env.TOKEN_SECRET;
@@ -90,7 +89,7 @@ async function run() {
         expiresIn: "365d",
       });
 
-      res.send(token);
+      res.send({ token });
     });
 
     // job listings api endpoints ........
@@ -222,7 +221,7 @@ async function run() {
     });
 
     // save a new applications (job seeker only)
-    app.post("/applications", async (req, res) => {
+    app.post("/applications", verifyToken, async (req, res) => {
       const data = req.body;
 
       const applicationDoc = { ...data };
