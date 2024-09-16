@@ -113,7 +113,7 @@ async function run() {
     });
 
     // create a new job (employer only)
-    app.post("/jobs", async (req, res) => {
+    app.post("/jobs", verifyToken, async (req, res) => {
       const data = req.body;
 
       const newJobDoc = {
