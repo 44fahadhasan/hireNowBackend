@@ -145,7 +145,12 @@ async function run() {
         .limit(perPageJobs)
         .toArray();
 
-      res.send({ jobs, totalJobsNumber });
+      // find all company names
+      const companyNames = await usersCollection
+        .find({ role: "employer" }, { projection: { companyName: 1 } })
+        .toArray();
+
+      res.send({ jobs, totalJobsNumber, companyNames });
     });
 
     // fetch a single job
