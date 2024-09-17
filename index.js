@@ -96,9 +96,56 @@ async function run() {
 
     // fetch all job listings
     app.get("/jobs", async (req, res) => {
-      const jobListings = await jobListingsCollection.find().toArray();
+      const { search, page, size, sort, salaryRange, company } = req?.query;
 
-      res.send(jobListings);
+      const perPageJobs = parseInt(size);
+      const skipJobs = parseInt(page) * parseInt(size);
+
+      const companys = JSON.parse(company || []);
+
+      const query = {};
+
+      // query job with search text
+      if (search) {
+        query.title = { $regex: search, $options: "i" };
+      }
+
+      // query job with salary range
+      if (salaryRange) {
+        const [min, max] = salaryRange
+          ?.split("-")
+          ?.map((value) => Number(value));
+
+        query.salary = { $gte: min, $lte: max };
+      }
+
+      // query job with companys
+      if (companys?.length) {
+        query["profile.companyName"] = { $in: companys };
+      }
+
+      // job sort
+      if (sort) {
+        if (sort === "Default") {
+        }
+        if (sort === "Remote") {
+          query.location = "Remote";
+        }
+        if (sort === "On-Site") {
+          query.location = "On-Site";
+        }
+      }
+
+      // count all jobs by query
+      const totalJobsNumber = await jobListingsCollection.countDocuments(query);
+
+      const jobs = await jobListingsCollection
+        .find(query)
+        .skip(skipJobs)
+        .limit(perPageJobs)
+        .toArray();
+
+      res.send({ jobs, totalJobsNumber });
     });
 
     // fetch a single job
@@ -118,6 +165,7 @@ async function run() {
 
       const newJobDoc = {
         ...data,
+        salary: Number(data.salary),
         postedAt: Date.now(),
       };
 
@@ -195,11 +243,7 @@ async function run() {
 
       const query = { email: email };
 
-      const options = {
-        projection: { _id: 0 },
-      };
-
-      const user = await usersCollection.findOne(query, options);
+      const user = await usersCollection.findOne(query);
 
       res.send(user);
     });
