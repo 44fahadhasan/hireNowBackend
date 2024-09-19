@@ -24,17 +24,16 @@ app.use(
 
 // token validaton of logged user
 const verifyToken = (req, res, next) => {
-  const token = req.headers;
+  const bearerAndToken = req.headers;
 
-  if (!token.authorization) {
+  const token = bearerAndToken.authorization.split(" ")[1];
+
+  if (token === "null") {
     return res.status(401).send({ message: "Token is null" });
   }
 
-  const orginalToken = token.authorization.split(" ")[1];
-
   const secretKey = process.env.TOKEN_SECRET;
-
-  jwt.verify(orginalToken, secretKey, (err, decoded) => {
+  jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
       return res.status(401).send({ message: "Token not match" });
     }
