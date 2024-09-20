@@ -256,7 +256,7 @@ async function run() {
 
     // fetch all applications
     app.get("/applications", verifyToken, async (req, res) => {
-      const { email } = req.body;
+      const { email } = req.headers;
 
       // validated user checking
       if (req.decoded.email !== email) {
@@ -268,11 +268,32 @@ async function run() {
       res.send(applications);
     });
 
+    // fetch a single application (job seeker only)
+    app.get("/applications/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const { email } = req.headers;
+
+      // validated user checking
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+
+      const query = { _id: new ObjectId(id) };
+
+      const application = await applicationsCollection.findOne(query);
+
+      res.send(application);
+    });
+
     // save a new applications (job seeker only)
     app.post("/applications", verifyToken, async (req, res) => {
       const data = req.body;
 
-      const applicationDoc = { ...data };
+      const applicationDoc = {
+        ...data,
+        status: "Applied",
+        date: Date.now(),
+      };
 
       const result = await applicationsCollection.insertOne(applicationDoc);
 
