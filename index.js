@@ -254,7 +254,7 @@ async function run() {
 
     // applications api endpoints ........
 
-    // fetch all applications
+    // fetch all applications ( specific job seeker only)
     app.get("/applications", verifyToken, async (req, res) => {
       const { email } = req.headers;
 
@@ -263,7 +263,9 @@ async function run() {
         return res.status(403).send({ message: "Forbidden access" });
       }
 
-      const applications = await applicationsCollection.find().toArray();
+      const query = { jobSeekerEmail: email };
+
+      const applications = await applicationsCollection.find(query).toArray();
 
       res.send(applications);
     });
@@ -289,10 +291,13 @@ async function run() {
     app.post("/applications", verifyToken, async (req, res) => {
       const data = req.body;
 
+      const email = req.decoded.email;
+
       const applicationDoc = {
         ...data,
         status: "Applied",
         date: Date.now(),
+        jobSeekerEmail: email,
       };
 
       const result = await applicationsCollection.insertOne(applicationDoc);
