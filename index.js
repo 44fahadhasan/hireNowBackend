@@ -187,6 +187,8 @@ async function run() {
         ...data,
         salary: Number(data.salary),
         postedAt: Date.now(),
+        applied: 0,
+        jobStatus: "Open",
       };
 
       const result = await jobListingsCollection.insertOne(newJobDoc);
@@ -319,6 +321,18 @@ async function run() {
       const result = await applicationsCollection.insertOne(applicationDoc);
 
       res.send(result);
+    });
+
+    // a single applied application number increment by 1
+    app.patch("/count-application-number/:id", async (req) => {
+      const id = req.params;
+
+      const query = { _id: new ObjectId(id) };
+      const UpdateDoc = {
+        $inc: { applied: 1 },
+      };
+
+      await jobListingsCollection.updateOne(query, UpdateDoc);
     });
 
     // ..................
