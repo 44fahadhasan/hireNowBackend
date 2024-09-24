@@ -163,6 +163,22 @@ async function run() {
       res.send(job);
     });
 
+    // fetch all posted jobs (only specific employer)
+    app.get("/posted-jobs", verifyToken, async (req, res) => {
+      const { email } = req.headers;
+
+      // validated user checking
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ message: "Forbidden access" });
+      }
+
+      const query = { "profile.email": email };
+
+      const postedJobs = await jobListingsCollection.find(query).toArray();
+
+      res.send(postedJobs);
+    });
+
     // create a new job (employer only)
     app.post("/jobs", verifyToken, async (req, res) => {
       const data = req.body;
