@@ -197,14 +197,17 @@ async function run() {
     });
 
     // update a job listing
-    app.put("/jobs/:id", async (req, res) => {
+    app.patch("/jobs/:id", async (req, res) => {
       const { id } = req.params;
       const data = req.body;
 
       const filter = { _id: new ObjectId(id) };
 
       const jobUpdateDoc = {
-        $set: { ...data },
+        $set: {
+          ...data,
+          salary: Number(data.salary),
+        },
       };
 
       const result = await jobListingsCollection.updateOne(
