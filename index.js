@@ -285,7 +285,7 @@ async function run() {
       }
 
       const query = {
-        $or: [{ jobSeekerEmail: email }, { "job.profile.email": email }],
+        $or: [{ applicantEmail: email }, { "job.profile.email": email }],
       };
 
       const applications = await applicationsCollection.find(query).toArray();
@@ -304,7 +304,7 @@ async function run() {
       }
 
       const query = {
-        $or: [{ jobSeekerEmail: email }, { "job.profile.email": email }],
+        $or: [{ applicantEmail: email }, { "job.profile.email": email }],
       };
 
       const application = await applicationsCollection.findOne(query);
@@ -322,7 +322,7 @@ async function run() {
         ...data,
         status: "Applied",
         date: Date.now(),
-        jobSeekerEmail: email,
+        applicantEmail: email,
       };
 
       const result = await applicationsCollection.insertOne(applicationDoc);
