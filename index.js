@@ -26,7 +26,7 @@ app.use(
 const verifyToken = (req, res, next) => {
   const bearerAndToken = req.headers;
 
-  const token = bearerAndToken.authorization.split(" ")[1];
+  const token = bearerAndToken?.authorization?.split(" ")[1];
 
   if (token === "null") {
     return res.status(401).send({ message: "Token is null" });
@@ -303,9 +303,7 @@ async function run() {
         return res.status(403).send({ message: "Forbidden access" });
       }
 
-      const query = {
-        $or: [{ applicantEmail: email }, { "job.profile.email": email }],
-      };
+      const query = { _id: new ObjectId(id) };
 
       const application = await applicationsCollection.findOne(query);
 
@@ -321,7 +319,7 @@ async function run() {
       const applicationDoc = {
         ...data,
         status: "Applied",
-        date: Date.now(),
+        appliedDate: Date.now(),
         applicantEmail: email,
       };
 
