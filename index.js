@@ -15,7 +15,7 @@ const port = process.env.PORT || 5003;
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://hirenow.netlify.app"],
+    origin: ["http://localhost:5173", "https://hirenowclient.netlify.app"],
     credentials: true,
   })
 );
@@ -342,12 +342,12 @@ async function run() {
 
     // ..................
     // clear the code when deploy in remote server
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.connect();
+    // // Send a ping to confirm a successful connection
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // code
   }
